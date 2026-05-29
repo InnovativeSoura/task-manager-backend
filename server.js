@@ -18,7 +18,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://profound-choux-b2c180.netlify.app"
+     "https://task-manager-backend-kyma.onrender.com"
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
