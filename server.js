@@ -2,6 +2,11 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
+import dns from "dns"
+
+dns.setServers([
+  "1.1.1.1","8.8.8.8"
+]);
 
 import authRoutes from "./routes/authRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
