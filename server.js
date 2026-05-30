@@ -2,11 +2,6 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
-import dns from "dns"
-
-dns.setServers([
-  "1.1.1.1","8.8.8.8"
-]);
 
 import authRoutes from "./routes/authRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
@@ -19,14 +14,28 @@ const app = express();
    CORS
 ========================= */
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://profound-choux-b2c180.netlify.app",
+];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-     "https://task-manager-backend-kyma.onrender.com"
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
+    origin: function (origin, callback) {
+      // Allow requests with no origin (Postman, mobile apps, etc.)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(
+        new Error(`CORS blocked for origin: ${origin}`)
+      );
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
@@ -38,11 +47,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 /* =========================
-   Test Route
+   Health Check
 ========================= */
 
 app.get("/", (req, res) => {
   res.status(200).json({
+    success: true,
     message: "Task Manager Backend Running",
   });
 });
@@ -53,6 +63,17 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
+
+/* =========================
+   404 Handler
+========================= */
+
+app.use("*", (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route Not Found",
+  });
+});
 
 /* =========================
    MongoDB Connection
@@ -69,7 +90,20 @@ mongoose
   });
 
 /* =========================
-   Server
+   Error Handler
+========================= */
+
+app.use((err, req, res, next) => {
+  console.error("Server Error:", err.message);
+
+  res.status(500).json({
+    success: false,
+    message: err.message,
+  });
+});
+
+/* =========================
+   Start Server
 ========================= */
 
 const PORT = process.env.PORT || 5000;
